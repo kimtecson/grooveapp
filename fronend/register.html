@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Groove — Create Account</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #0d0d0f;
+    --surface:  #16161a;
+    --border:   #2a2a30;
+    --gold:     #c9a84c;
+    --gold-dim: #8a6f2e;
+    --text:     #e8e4dc;
+    --muted:    #7a7570;
+    --error:    #e05c5c;
+    --success:  #5cb85c;
+    --radius:   4px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Grooves decoration (opposite side from login) */
+  .vinyl {
+    position: fixed;
+    width: 480px; height: 480px;
+    border-radius: 50%;
+    left: -100px; top: 50%;
+    transform: translateY(-50%);
+    background: radial-gradient(circle at 50%,
+      #1a1a1a 0%, #1a1a1a 12%,
+      #111 13%, #222 14%,
+      #111 22%, #222 23%,
+      #111 31%, #222 32%,
+      #111 40%, #222 41%,
+      #111 49%, #222 50%,
+      #0d0d0d 100%
+    );
+    box-shadow: 0 0 60px rgba(201,168,76,0.06), inset 0 0 30px rgba(0,0,0,0.6);
+    animation: spin 30s linear infinite;
+    opacity: 0.45;
+  }
+  .vinyl::after {
+    content: '';
+    position: absolute;
+    width: 56px; height: 56px;
+    background: var(--gold);
+    border-radius: 50%;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 0 8px #0d0d0d, 0 0 20px rgba(201,168,76,0.3);
+  }
+  @keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }
+
+  .card {
+    position: relative;
+    width: 420px;
+    padding: 56px 48px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+    animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    color: var(--gold);
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+  }
+  .tagline {
+    font-size: 0.78rem;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 40px;
+  }
+
+  label {
+    display: block;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 24px;
+  }
+  input:focus { border-color: var(--gold); }
+  input::placeholder { color: var(--muted); }
+
+  .btn {
+    width: 100%;
+    padding: 13px;
+    background: var(--gold);
+    color: #0d0d0d;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    margin-top: 8px;
+  }
+  .btn:hover   { background: #d4b05a; }
+  .btn:active  { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .msg {
+    font-size: 0.82rem;
+    margin-top: 16px;
+    min-height: 20px;
+    text-align: center;
+  }
+  .msg.error   { color: var(--error); animation: shake 0.3s ease; }
+  .msg.success { color: var(--success); }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25%      { transform: translateX(-6px); }
+    75%      { transform: translateX(6px); }
+  }
+
+  .footer-link {
+    text-align: center;
+    margin-top: 32px;
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+  .footer-link a {
+    color: var(--gold);
+    text-decoration: none;
+    border-bottom: 1px solid var(--gold-dim);
+    transition: color 0.2s;
+  }
+  .footer-link a:hover { color: #d4b05a; }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 32px 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="vinyl"></div>
+
+<div class="card">
+  <div class="logo">Groove</div>
+  <div class="tagline">Create your account</div>
+
+  <label for="email">Email address</label>
+  <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
+
+  <label for="username">Username</label>
+  <input type="text" id="username" placeholder="Your name" autocomplete="username">
+
+  <label for="password">Password</label>
+  <input type="password" id="password" placeholder="••••••••" autocomplete="new-password">
+
+  <button class="btn" id="registerBtn" onclick="doRegister()">Create Account</button>
+
+  <div class="msg" id="msgEl"></div>
+
+  <div class="divider"></div>
+  <div class="footer-link">
+    Already have an account? <a href="login.html">Sign in</a>
+  </div>
+</div>
+
+<script>
+  const API_BASE = "http://localhost:5001";
+
+  async function doRegister() {
+    const email    = document.getElementById("email").value.trim();
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const btn      = document.getElementById("registerBtn");
+    const msgEl    = document.getElementById("msgEl");
+
+    msgEl.textContent = "";
+    msgEl.className   = "msg";
+
+    if (!email || !username || !password) {
+      msgEl.textContent = "All fields are required.";
+      msgEl.className   = "msg error";
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Creating…";
+
+    try {
+      const resp = await fetch(`${API_BASE}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, user_name: username, password }),
+      });
+
+      const data = await resp.json();
+
+      if (resp.ok) {
+        msgEl.textContent = "Account created! Redirecting to sign in…";
+        msgEl.className   = "msg success";
+        setTimeout(() => window.location.href = "login.html", 1800);
+      } else {
+        msgEl.textContent = data.error || "Registration failed. Please try again.";
+        msgEl.className   = "msg error";
+      }
+    } catch (e) {
+      msgEl.textContent = "Connection error. Please try again.";
+      msgEl.className   = "msg error";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Create Account";
+    }
+  }
+
+  document.addEventListener("keydown", e => {
+    if (e.key === "Enter") doRegister();
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Groove — Your Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:         #0d0d0f;
+    --surface:    #16161a;
+    --surface2:   #1d1d22;
+    --border:     #2a2a30;
+    --gold:       #c9a84c;
+    --gold-dim:   #8a6f2e;
+    --text:       #e8e4dc;
+    --muted:      #7a7570;
+    --error:      #e05c5c;
+    --success:    #5cb85c;
+    --radius:     4px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── Top bar ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    height: 60px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.4rem;
+    color: var(--gold);
+    letter-spacing: 0.04em;
+  }
+  .user-area {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .user-chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 0.82rem;
+    color: var(--text);
+  }
+  .user-chip span { color: var(--gold); font-weight: 500; }
+  .logout-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 6px 14px;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .logout-btn:hover { color: var(--error); border-color: var(--error); }
+
+  /* ── Layout ── */
+  .page {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 0;
+    min-height: calc(100vh - 60px);
+  }
+
+  /* Left panel: subscriptions */
+  .panel-sub {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 32px 28px;
+    overflow-y: auto;
+    max-height: calc(100vh - 60px);
+    position: sticky; top: 60px;
+  }
+
+  /* Right panel: query */
+  .panel-query {
+    padding: 32px 40px;
+    overflow-y: auto;
+  }
+
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--gold);
+    margin-bottom: 4px;
+    letter-spacing: 0.02em;
+  }
+  .section-sub {
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  /* ── Inputs & buttons ── */
+  .field-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 16px;
+    margin-bottom: 16px;
+  }
+  .field-group.full { grid-template-columns: 1fr; }
+
+  label {
+    display: block;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  input[type="text"], input[type="search"] {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus { border-color: var(--gold); }
+  input::placeholder { color: var(--muted); }
+
+  .btn-primary {
+    background: var(--gold);
+    color: #0d0d0d;
+    border: none;
+    border-radius: var(--radius);
+    padding: 10px 24px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .btn-primary:hover  { background: #d4b05a; }
+  .btn-primary:active { transform: scale(0.97); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-ghost {
+    background: none;
+    color: var(--gold);
+    border: 1px solid var(--gold-dim);
+    border-radius: var(--radius);
+    padding: 6px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    white-space: nowrap;
+  }
+  .btn-ghost:hover { background: var(--gold); color: #0d0d0d; }
+
+  .btn-remove {
+    background: none;
+    color: var(--error);
+    border: 1px solid rgba(224,92,92,0.3);
+    border-radius: var(--radius);
+    padding: 5px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+  }
+  .btn-remove:hover { background: rgba(224,92,92,0.12); }
+
+  /* ── Song cards ── */
+  .song-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    animation: slideIn 0.3s ease both;
+    transition: border-color 0.2s;
+  }
+  .song-card:hover { border-color: var(--gold-dim); }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  .song-img {
+    width: 48px; height: 48px;
+    border-radius: 2px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: var(--border);
+  }
+  .song-info { flex: 1; min-width: 0; }
+  .song-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 0.95rem;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .song-meta {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .song-meta strong { color: var(--text); font-weight: 400; }
+
+  /* ── Query results ── */
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .result-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    animation: fadeIn 0.3s ease both;
+    transition: border-color 0.2s;
+  }
+  .result-card:hover { border-color: var(--gold-dim); }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-img {
+    width: 56px; height: 56px;
+    border-radius: 2px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: var(--border);
+  }
+  .result-info { flex: 1; min-width: 0; }
+  .result-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .result-meta {
+    font-size: 0.76rem;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+  .result-meta strong { color: var(--text); font-weight: 400; }
+
+  /* ── Status messages ── */
+  .status {
+    font-size: 0.82rem;
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    margin-top: 16px;
+  }
+  .status.error   { color: var(--error);   background: rgba(224,92,92,0.08); border: 1px solid rgba(224,92,92,0.2); }
+  .status.info    { color: var(--muted);   background: var(--surface2);      border: 1px solid var(--border); }
+  .status.success { color: var(--success); background: rgba(92,184,92,0.08); border: 1px solid rgba(92,184,92,0.2); }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    line-height: 1.8;
+  }
+  .empty-state .icon {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 12px;
+    opacity: 0.4;
+  }
+
+  .divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+  /* Loading spinner */
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(201,168,76,0.3);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .subscribed-badge {
+    font-size: 0.68rem;
+    color: var(--success);
+    border: 1px solid rgba(92,184,92,0.3);
+    border-radius: 10px;
+    padding: 3px 8px;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header>
+  <div class="logo">Groove</div>
+  <div class="user-area">
+    <div class="user-chip">Signed in as <span id="userName">…</span></div>
+    <button class="logout-btn" onclick="doLogout()">Logout</button>
+  </div>
+</header>
+
+<div class="page">
+
+  <!-- ── LEFT: Subscription area ── -->
+  <aside class="panel-sub">
+    <div class="section-title">Your Library</div>
+    <div class="section-sub">Subscribed tracks</div>
+    <div id="subList">
+      <div class="empty-state">
+        <span class="icon">♪</span>
+        Loading your library…
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── RIGHT: Query area ── -->
+  <main class="panel-query">
+    <div class="section-title">Discover Music</div>
+    <div class="section-sub">Search the catalogue</div>
+
+    <div class="field-group">
+      <div>
+        <label for="qTitle">Title</label>
+        <input type="text" id="qTitle" placeholder="e.g. Ho Hey">
+      </div>
+      <div>
+        <label for="qArtist">Artist</label>
+        <input type="text" id="qArtist" placeholder="e.g. Taylor Swift">
+      </div>
+      <div>
+        <label for="qYear">Year</label>
+        <input type="text" id="qYear" placeholder="e.g. 1977">
+      </div>
+      <div>
+        <label for="qAlbum">Album</label>
+        <input type="text" id="qAlbum" placeholder="e.g. Fearless">
+      </div>
+    </div>
+
+    <button class="btn-primary" id="queryBtn" onclick="doQuery()">Query</button>
+
+    <div id="queryStatus"></div>
+    <div class="results-grid" id="resultsGrid"></div>
+  </main>
+</div>
+
+<script>
+  // ── Config ─────────────────────────────────────────────────────────────────
+  const API_BASE = "http://localhost:5001";
+
+  // Track which music_ids are already subscribed
+  let subscribedIds = new Set();
+
+  // Always attach the stored email so the backend login_required decorator works
+  function authHeaders(extra = {}) {
+    const email = sessionStorage.getItem("email") || "";
+    return { "X-User-Email": email, ...extra };
+  }
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+  window.addEventListener("DOMContentLoaded", async () => {
+    // Restore username from session storage (set on login)
+    const name = sessionStorage.getItem("user_name") || "User";
+    document.getElementById("userName").textContent = name;
+
+    // Verify session is still valid
+    try {
+      const r = await fetch(`${API_BASE}/auth/me`, { headers: authHeaders() });
+      if (!r.ok) { window.location.href = "login.html"; return; }
+    } catch {
+      window.location.href = "login.html"; return;
+    }
+
+    loadSubscriptions();
+  });
+
+  // ── Logout ─────────────────────────────────────────────────────────────────
+  async function doLogout() {
+    await fetch(`${API_BASE}/auth/logout`, { method: "POST", headers: authHeaders() });
+    sessionStorage.clear();
+    window.location.href = "login.html";
+  }
+
+  // ── Subscriptions ──────────────────────────────────────────────────────────
+  async function loadSubscriptions() {
+    const subList = document.getElementById("subList");
+    try {
+      const r    = await fetch(`${API_BASE}/subscription`, { headers: authHeaders() });
+      const data = await r.json();
+      const subs = data.subscriptions || [];
+
+      subscribedIds = new Set(subs.map(s => musicId(s)));
+
+      if (subs.length === 0) {
+        subList.innerHTML = `<div class="empty-state">
+          <span class="icon">♪</span>
+          Your library is empty.<br>Search for songs and subscribe!
+        </div>`;
+        return;
+      }
+
+      subList.innerHTML = subs.map(s => subCard(s)).join("");
+    } catch {
+      subList.innerHTML = `<div class="status error">Failed to load library.</div>`;
+    }
+  }
+
+  function musicId(s) {
+    return `${s.artist}#${s.title}#${s.year}#${s.album}`;
+  }
+
+  function subCard(s) {
+    const id  = musicId(s);
+    const esc = encodeURIComponent(id);
+    return `
+      <div class="song-card" id="sub-${btoa(id).replace(/[^a-zA-Z0-9]/g,'')}">
+        <img class="song-img" src="${s.img_url || ''}" alt="${esc_html(s.artist)}"
+             onerror="this.style.opacity='0.3'">
+        <div class="song-info">
+          <div class="song-title">${esc_html(s.title)}</div>
+          <div class="song-meta">
+            <strong>${esc_html(s.artist)}</strong> · ${esc_html(s.album)} · ${esc_html(s.year)}
+          </div>
+        </div>
+        <button class="btn-remove" onclick="removeSub('${id.replace(/'/g,"\\'")}')">Remove</button>
+      </div>`;
+  }
+
+  async function removeSub(id) {
+    const key  = btoa(id).replace(/[^a-zA-Z0-9]/g, '');
+    const card = document.getElementById(`sub-${key}`);
+    if (card) card.style.opacity = "0.4";
+
+    try {
+      const r = await fetch(`${API_BASE}/subscription/${encodeURIComponent(id)}`, {
+        method: "DELETE", headers: authHeaders()
+      });
+      if (r.ok) {
+        subscribedIds.delete(id);
+        if (card) card.remove();
+        // Update subscribe buttons in results grid
+        const btn = document.querySelector(`[data-mid="${CSS.escape(id)}"]`);
+        if (btn) {
+          btn.textContent = "Subscribe";
+          btn.disabled = false;
+          btn.className = "btn-ghost";
+        }
+        // Show empty state if library now empty
+        const subList = document.getElementById("subList");
+        if (!subList.querySelector(".song-card")) {
+          subList.innerHTML = `<div class="empty-state">
+            <span class="icon">♪</span>
+            Your library is empty.<br>Search for songs and subscribe!
+          </div>`;
+        }
+      } else {
+        if (card) card.style.opacity = "1";
+      }
+    } catch {
+      if (card) card.style.opacity = "1";
+    }
+  }
+
+  // ── Music query ────────────────────────────────────────────────────────────
+  async function doQuery() {
+    const title  = document.getElementById("qTitle").value.trim();
+    const artist = document.getElementById("qArtist").value.trim();
+    const year   = document.getElementById("qYear").value.trim();
+    const album  = document.getElementById("qAlbum").value.trim();
+
+    const statusEl  = document.getElementById("queryStatus");
+    const gridEl    = document.getElementById("resultsGrid");
+    const btn       = document.getElementById("queryBtn");
+
+    statusEl.innerHTML = "";
+    gridEl.innerHTML   = "";
+
+    if (!title && !artist && !year && !album) {
+      statusEl.innerHTML = `<div class="status error">Please fill in at least one field.</div>`;
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner"></span>Searching…`;
+
+    const params = new URLSearchParams();
+    if (title)  params.append("title",  title);
+    if (artist) params.append("artist", artist);
+    if (year)   params.append("year",   year);
+    if (album)  params.append("album",  album);
+
+    try {
+      const r    = await fetch(`${API_BASE}/music/query?${params}`, { headers: authHeaders() });
+      const data = await r.json();
+
+      if (!r.ok) {
+        statusEl.innerHTML = `<div class="status error">${esc_html(data.error || "Query failed.")}</div>`;
+        return;
+      }
+
+      const songs = data.songs || [];
+      if (songs.length === 0 || data.message) {
+        statusEl.innerHTML = `<div class="status info">No result is retrieved. Please query again.</div>`;
+        return;
+      }
+
+      gridEl.innerHTML = songs.map(s => resultCard(s)).join("");
+
+    } catch {
+      statusEl.innerHTML = `<div class="status error">Connection error. Please try again.</div>`;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Query";
+    }
+  }
+
+  function resultCard(s) {
+    const id       = musicId(s);
+    const already  = subscribedIds.has(id);
+    const btnHtml  = already
+      ? `<span class="subscribed-badge">✓ Saved</span>`
+      : `<button class="btn-ghost" data-mid="${esc_html(id)}" onclick="subscribe(this, ${jsonSong(s)})">Subscribe</button>`;
+
+    return `
+      <div class="result-card">
+        <img class="result-img" src="${s.img_url || ''}" alt="${esc_html(s.artist)}"
+             onerror="this.style.opacity='0.3'">
+        <div class="result-info">
+          <div class="result-title">${esc_html(s.title)}</div>
+          <div class="result-meta">
+            <strong>${esc_html(s.artist)}</strong><br>
+            ${esc_html(s.album)} · ${esc_html(s.year)}
+          </div>
+        </div>
+        ${btnHtml}
+      </div>`;
+  }
+
+  async function subscribe(btn, song) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner"></span>`;
+
+    try {
+      const r = await fetch(`${API_BASE}/subscription`, {
+        method: "POST",
+        headers: authHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify(song),
+      });
+
+      if (r.ok) {
+        subscribedIds.add(musicId(song));
+        // Replace button with badge
+        btn.outerHTML = `<span class="subscribed-badge">✓ Saved</span>`;
+        // Refresh subscription panel
+        loadSubscriptions();
+      } else {
+        btn.disabled = false;
+        btn.textContent = "Subscribe";
+      }
+    } catch {
+      btn.disabled = false;
+      btn.textContent = "Subscribe";
+    }
+  }
+
+  // ── Utilities ──────────────────────────────────────────────────────────────
+  function esc_html(str) {
+    return String(str || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function jsonSong(s) {
+    // Escape both quotes so the JSON is safe inside an onclick="..." attribute
+    return JSON.stringify({
+      title:     s.title,
+      artist:    s.artist,
+      year:      s.year,
+      album:     s.album,
+      image_url: s.img_url || "",
+    }).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  // Enter key triggers query when focused in query inputs
+  ["qTitle","qArtist","qYear","qAlbum"].forEach(id => {
+    document.getElementById(id)?.addEventListener("keydown", e => {
+      if (e.key === "Enter") doQuery();
+    });
+  });
+</script>
+</body>
+</html>

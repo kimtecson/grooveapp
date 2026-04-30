@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Groove — Sign In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* ── Config ── */
+  :root {
+    --bg:        #0d0d0f;
+    --surface:   #16161a;
+    --border:    #2a2a30;
+    --gold:      #c9a84c;
+    --gold-dim:  #8a6f2e;
+    --text:      #e8e4dc;
+    --muted:     #7a7570;
+    --error:     #e05c5c;
+    --radius:    4px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Vinyl record decoration */
+  .vinyl {
+    position: fixed;
+    width: 520px; height: 520px;
+    border-radius: 50%;
+    right: -120px; top: 50%;
+    transform: translateY(-50%);
+    background: radial-gradient(circle at 50%,
+      #1a1a1a 0%, #1a1a1a 12%,
+      #111 13%, #222 14%,
+      #111 22%, #222 23%,
+      #111 31%, #222 32%,
+      #111 40%, #222 41%,
+      #111 49%, #222 50%,
+      #0d0d0d 100%
+    );
+    box-shadow:
+      0 0 0 2px #333,
+      0 0 60px rgba(201,168,76,0.08),
+      inset 0 0 30px rgba(0,0,0,0.6);
+    animation: spin 24s linear infinite;
+    opacity: 0.55;
+  }
+  .vinyl::after {
+    content: '';
+    position: absolute;
+    width: 60px; height: 60px;
+    background: var(--gold);
+    border-radius: 50%;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 0 8px #0d0d0d, 0 0 20px rgba(201,168,76,0.4);
+  }
+  @keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }
+
+  /* Card */
+  .card {
+    position: relative;
+    width: 420px;
+    padding: 56px 48px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+    animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    color: var(--gold);
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+  }
+  .tagline {
+    font-size: 0.78rem;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 40px;
+  }
+
+  label {
+    display: block;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 24px;
+  }
+  input:focus { border-color: var(--gold); }
+  input::placeholder { color: var(--muted); }
+
+  .btn {
+    width: 100%;
+    padding: 13px;
+    background: var(--gold);
+    color: #0d0d0d;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    margin-top: 8px;
+  }
+  .btn:hover   { background: #d4b05a; }
+  .btn:active  { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .error-msg {
+    color: var(--error);
+    font-size: 0.82rem;
+    margin-top: 16px;
+    min-height: 20px;
+    text-align: center;
+    animation: shake 0.3s ease;
+  }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25%      { transform: translateX(-6px); }
+    75%      { transform: translateX(6px); }
+  }
+
+  .footer-link {
+    text-align: center;
+    margin-top: 32px;
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+  .footer-link a {
+    color: var(--gold);
+    text-decoration: none;
+    border-bottom: 1px solid var(--gold-dim);
+    transition: color 0.2s;
+  }
+  .footer-link a:hover { color: #d4b05a; }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 32px 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="vinyl"></div>
+
+<div class="card">
+  <div class="logo">Groove</div>
+  <div class="tagline">Your personal music vault</div>
+
+  <label for="email">Email address</label>
+  <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
+
+  <label for="password">Password</label>
+  <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+
+  <button class="btn" id="loginBtn" onclick="doLogin()">Sign In</button>
+
+  <div class="error-msg" id="errorMsg"></div>
+
+  <div class="divider"></div>
+  <div class="footer-link">
+    New to Groove? <a href="register.html">Create an account</a>
+  </div>
+</div>
+
+<script>
+  // ── Config: point to your backend ─────────────────────────────────────────
+  const API_BASE = "http://localhost:5001";   // e.g. "http://ec2-xx.compute.amazonaws.com"
+
+  async function doLogin() {
+    const email    = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const btn      = document.getElementById("loginBtn");
+    const errEl    = document.getElementById("errorMsg");
+
+    errEl.textContent = "";
+
+    if (!email || !password) {
+      errEl.textContent = "email or password is invalid";
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Signing in…";
+
+    try {
+      const resp = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await resp.json();
+
+      if (resp.ok) {
+        // Store user info for the main page
+        sessionStorage.setItem("user_name", data.user_name);
+        sessionStorage.setItem("email", email);
+        window.location.href = "main.html";
+      } else {
+        errEl.textContent = data.error || "email or password is invalid";
+      }
+    } catch (e) {
+      errEl.textContent = "Connection error. Please try again.";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Sign In";
+    }
+  }
+
+  // Allow Enter key to submit
+  document.addEventListener("keydown", e => {
+    if (e.key === "Enter") doLogin();
+  });
+</script>
+</body>
+</html>
