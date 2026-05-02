@@ -147,62 +147,16 @@ def query_music():
     if not any([title, artist, year, album]):
         return jsonify({"error": "At least one field must be provided"}), 400
 
-    items     = []
-    operation = ""
-
     try:
         t_start = time.perf_counter()
 
-        if artist:
-            operation = "Query (PK=artist)"
-            resp  = music_table.query(KeyConditionExpression=Key("artist").eq(artist))
-            items = resp.get("Items", [])
-            if not items:
-                # Exact match missed (likely case mismatch) — fall back to full scan
-                operation = "Scan (case-insensitive artist)"
-                resp  = music_table.scan()
-                items = resp.get("Items", [])
-
-        elif title:
-            operation = "Query (GSI title-index)"
-            resp  = music_table.query(
-                IndexName="title-index",
-                KeyConditionExpression=Key("title").eq(title)
-            )
-            items = resp.get("Items", [])
-            if not items:
-                # Exact match missed — fall back to full scan
-                operation = "Scan (case-insensitive title)"
-                resp  = music_table.scan()
-                items = resp.get("Items", [])
-
-        else:
-            operation    = "Scan (no partition key)"
-            filter_parts = []
-            expr_values  = {}
-            expr_names   = {}
-
-            if year:
-                filter_parts.append("#yr = :yr")
-                expr_names["#yr"]  = "year"
-                expr_values[":yr"] = year
-
-            if album:
-                filter_parts.append("#alb = :alb")
-                expr_names["#alb"]  = "album"
-                expr_values[":alb"] = album
-
-            resp  = music_table.scan(
-                FilterExpression=" AND ".join(filter_parts),
-                ExpressionAttributeNames=expr_names,
-                ExpressionAttributeValues=expr_values,
-            )
-            items = resp.get("Items", [])
+        resp  = music_table.scan()
+        items = resp.get("Items", [])
 
         t_end      = time.perf_counter()
         elapsed_ms = (t_end - t_start) * 1000
         elapsed_ns = (t_end - t_start) * 1e9
-        print(f"[QUERY] {operation} -> {len(items)} items | {elapsed_ms:.4f} ms ({elapsed_ns:.0f} ns)")
+        print(f"[QUERY] Scan -> {len(items)} items | {elapsed_ms:.4f} ms ({elapsed_ns:.0f} ns)")
 
     except ClientError as e:
         return jsonify({"error": str(e)}), 500
@@ -210,7 +164,7 @@ def query_music():
     def matches(item):
         if title  and title.lower()  not in item.get("title",  "").lower(): return False
         if artist and artist.lower() not in item.get("artist", "").lower(): return False
-        if year   and str(item.get("year", "")) != year:                    return False
+        if year   and year not in str(item.get("year", "")):               return False
         if album  and album.lower()  not in item.get("album",  "").lower(): return False
         return True
 
@@ -221,7 +175,7 @@ def query_music():
     if not results:
         return jsonify({"message": "No result is retrieved. Please query again", "songs": []}), 200
 
-    return jsonify({"songs": results, "debug": {"operation": operation, "elapsed_ms": round(elapsed_ms, 4)}}), 200
+    return jsonify({"songs": results, "debug": {"operation": "scan", "elapsed_ms": round(elapsed_ms, 4)}}), 200
 
 
 # ── Subscription routes ───────────────────────────────────────────────────────

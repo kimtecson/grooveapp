@@ -1,1 +1,7 @@
 CLAUDE.md
+env.local
+env.prod
+lambda.zip
+lambda_package/
+__pycache__/
+*.pyc

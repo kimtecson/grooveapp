@@ -1,0 +1,37 @@
+{
+  "family": "musicapp-backend",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::654654503160:role/LabRole",
+  "taskRoleArn": "arn:aws:iam::654654503160:role/LabRole",
+  "containerDefinitions": [
+    {
+      "name": "musicapp-backend",
+      "image": "654654503160.dkr.ecr.us-east-1.amazonaws.com/musicapp-backend:latest",
+      "portMappings": [
+        {
+          "containerPort": 5000,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        { "name": "AWS_REGION",    "value": "us-east-1" },
+        { "name": "S3_BUCKET",     "value": "music-app-images" },
+        { "name": "LOGIN_TABLE",   "value": "login" },
+        { "name": "MUSIC_TABLE",   "value": "music" },
+        { "name": "SUB_TABLE",     "value": "subscription" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/musicapp-backend",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "essential": true
+    }
+  ]
+}

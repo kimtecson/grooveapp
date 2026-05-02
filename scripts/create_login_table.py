@@ -25,16 +25,16 @@ client   = boto3.client("dynamodb",   **kwargs)
 
 # ── 10 seed users ─────────────────────────────────────────────────────────────
 USERS = [
-    {"email": "s3958264@student.rmit.edu.au", "user_name": "Kimberly Tecson",  "password": "Password01!"},
-    {"email": "s3910432@student.rmit.edu.au", "user_name": "James Miller",     "password": "Password02!"},
-    {"email": "s3821765@student.rmit.edu.au", "user_name": "Priya Sharma",     "password": "Password03!"},
-    {"email": "s3745890@student.rmit.edu.au", "user_name": "Lucas Nguyen",     "password": "Password04!"},
-    {"email": "s3698123@student.rmit.edu.au", "user_name": "Aisha Patel",      "password": "Password05!"},
-    {"email": "s3612457@student.rmit.edu.au", "user_name": "Connor Walsh",     "password": "Password06!"},
-    {"email": "s3589034@student.rmit.edu.au", "user_name": "Sofia Rossi",      "password": "Password07!"},
-    {"email": "s3476291@student.rmit.edu.au", "user_name": "Daniel Kim",       "password": "Password08!"},
-    {"email": "s3354678@student.rmit.edu.au", "user_name": "Emma Thompson",    "password": "Password09!"},
-    {"email": "s3231045@student.rmit.edu.au", "user_name": "Mohammed Al-Amin", "password": "Password10!"},
+    {"email": "s41599720@student.rmit.edu.au", "user_name": "KimberlyTecson0", "password": "012345"},
+    {"email": "s41599721@student.rmit.edu.au", "user_name": "KimberlyTecson1", "password": "123456"},
+    {"email": "s41599722@student.rmit.edu.au", "user_name": "KimberlyTecson2", "password": "234567"},
+    {"email": "s41599723@student.rmit.edu.au", "user_name": "KimberlyTecson3", "password": "345678"},
+    {"email": "s41599724@student.rmit.edu.au", "user_name": "KimberlyTecson4", "password": "456789"},
+    {"email": "s41599725@student.rmit.edu.au", "user_name": "KimberlyTecson5", "password": "567890"},
+    {"email": "s41599726@student.rmit.edu.au", "user_name": "KimberlyTecson6", "password": "678901"},
+    {"email": "s41599727@student.rmit.edu.au", "user_name": "KimberlyTecson7", "password": "789012"},
+    {"email": "s41599728@student.rmit.edu.au", "user_name": "KimberlyTecson8", "password": "890123"},
+    {"email": "s41599729@student.rmit.edu.au", "user_name": "KimberlyTecson9", "password": "901234"},
 ]
 
 

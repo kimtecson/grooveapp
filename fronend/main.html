@@ -398,7 +398,7 @@
 
 <script>
   // ── Config ─────────────────────────────────────────────────────────────────
-  const API_BASE = "http://localhost:5001";
+  const API_BASE = "http://54.175.223.18";
 
   // Track which music_ids are already subscribed
   let subscribedIds = new Set();
@@ -556,6 +556,7 @@
         return;
       }
 
+      statusEl.innerHTML = `<div class="status info">${songs.length} result${songs.length !== 1 ? "s" : ""} found.</div>`;
       gridEl.innerHTML = songs.map(s => resultCard(s)).join("");
 
     } catch {
@@ -570,7 +571,7 @@
     const id       = musicId(s);
     const already  = subscribedIds.has(id);
     const btnHtml  = already
-      ? `<span class="subscribed-badge">✓ Saved</span>`
+      ? `<span class="subscribed-badge">✓ Subscribed</span>`
       : `<button class="btn-ghost" data-mid="${esc_html(id)}" onclick="subscribe(this, ${jsonSong(s)})">Subscribe</button>`;
 
     return `
@@ -602,7 +603,7 @@
       if (r.ok) {
         subscribedIds.add(musicId(song));
         // Replace button with badge
-        btn.outerHTML = `<span class="subscribed-badge">✓ Saved</span>`;
+        btn.outerHTML = `<span class="subscribed-badge">✓ Subscribed</span>`;
         // Refresh subscription panel
         loadSubscriptions();
       } else {

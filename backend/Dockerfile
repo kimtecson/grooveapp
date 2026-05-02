@@ -13,11 +13,9 @@ COPY --from=builder /install /usr/local
 COPY app.py .
 
 # Non-root user for security
-RUN useradd -m appuser
+RUN useradd -m appuser && chown -R appuser /app
 USER appuser
 
-EXPOSE 5000
+EXPOSE 80
 
-# Gunicorn: 4 workers, bind to 0.0.0.0:5000
-# In ECS the ALB/Nginx terminates TLS; Gunicorn runs on 5000 internally
-CMD ["gunicorn", "--workers", "4", "--bind", "0.0.0.0:5000", "--timeout", "120", "app:app"]
+CMD ["gunicorn", "--workers", "4", "--bind", "0.0.0.0:80", "--timeout", "120", "app:app"]
