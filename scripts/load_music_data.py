@@ -57,23 +57,27 @@ def load_songs(json_path: str):
                 print(f"  SKIP (missing fields): {song}")
                 continue
 
-            # Composite sort key — guarantees uniqueness across all edge cases
-            sk = f"{title}#{year}#{album}"
+            # Composite keys
+            music_sk        = f"{album}#{year}#{title}"
+            artist_year_sk  = f"{year}#{album}#{title}"
+            title_lookup_sk = f"{artist}#{album}#{year}"
 
-            dedup_key = (artist, sk)
+            dedup_key = (artist, music_sk)
             if dedup_key in seen:
-                print(f"  DUPLICATE skipped: {artist} | {sk}")
+                print(f"  DUPLICATE skipped: {artist} | {music_sk}")
                 duplicates += 1
                 continue
             seen.add(dedup_key)
 
             batch.put_item(Item={
-                "artist":           artist,
-                "title#year#album": sk,
-                "title":            title,
-                "year":             year,
-                "album":            album,
-                "image_url":        img,
+                "artist":          artist,
+                "music_sk":        music_sk,
+                "title":           title,
+                "year":            year,
+                "album":           album,
+                "image_url":       img,
+                "artist_year_sk":  artist_year_sk,
+                "title_lookup_sk": title_lookup_sk,
             })
             loaded += 1
 

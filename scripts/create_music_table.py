@@ -36,33 +36,34 @@ def create_table():
             # ── Key schema ────────────────────────────────────────────────────
             KeySchema=[
                 {"AttributeName": "artist",           "KeyType": "HASH"},
-                {"AttributeName": "title#year#album", "KeyType": "RANGE"},
+                {"AttributeName": "music_sk",         "KeyType": "RANGE"},
             ],
             # ── All attributes referenced in keys / indexes ───────────────────
             AttributeDefinitions=[
                 {"AttributeName": "artist",           "AttributeType": "S"},
-                {"AttributeName": "title#year#album", "AttributeType": "S"},
+                {"AttributeName": "music_sk",         "AttributeType": "S"},
                 {"AttributeName": "title",            "AttributeType": "S"},
-                {"AttributeName": "year",             "AttributeType": "S"},
+                {"AttributeName": "artist_year_sk",   "AttributeType": "S"},
+                {"AttributeName": "title_lookup_sk",  "AttributeType": "S"},
             ],
-            # ── GSI: query by title (cross-partition search) ──────────────────
+            # ── GSI: query by title ───────────────────────────────────────────
             GlobalSecondaryIndexes=[
                 {
-                    "IndexName": "title-index",
+                    "IndexName": "music_GSI_title",
                     "KeySchema": [
-                        {"AttributeName": "title",  "KeyType": "HASH"},
-                        {"AttributeName": "artist", "KeyType": "RANGE"},
+                        {"AttributeName": "title",           "KeyType": "HASH"},
+                        {"AttributeName": "title_lookup_sk", "KeyType": "RANGE"},
                     ],
                     "Projection": {"ProjectionType": "ALL"},
                 }
             ],
-            # ── LSI: query by artist + year (same partition) ──────────────────
+            # ── LSI: query by artist + year ───────────────────────────────────
             LocalSecondaryIndexes=[
                 {
-                    "IndexName": "artist-year-index",
+                    "IndexName": "music_LSI_artist_year",
                     "KeySchema": [
-                        {"AttributeName": "artist", "KeyType": "HASH"},
-                        {"AttributeName": "year",   "KeyType": "RANGE"},
+                        {"AttributeName": "artist",         "KeyType": "HASH"},
+                        {"AttributeName": "artist_year_sk", "KeyType": "RANGE"},
                     ],
                     "Projection": {"ProjectionType": "ALL"},
                 }
@@ -75,9 +76,9 @@ def create_table():
         waiter.wait(TableName=MUSIC_TABLE)
         print(f"  Table '{MUSIC_TABLE}' created successfully.")
         print(f"  PK  : artist")
-        print(f"  SK  : title#year#album")
-        print(f"  GSI : title-index       (PK=title,  SK=artist)")
-        print(f"  LSI : artist-year-index (PK=artist, SK=year)")
+        print(f"  SK  : music_sk = album#year#title")
+        print(f"  GSI : music_GSI_title       (PK=title,  SK=title_lookup_sk=artist#album#year)")
+        print(f"  LSI : music_LSI_artist_year (PK=artist, SK=artist_year_sk=year#album#title)")
 
     except ClientError as e:
         if e.response["Error"]["Code"] == "ResourceInUseException":

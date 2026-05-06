@@ -5,13 +5,13 @@ The token is the user's email stored in sessionStorage and sent as X-User-Email 
 """
 
 import os
-import time
 import boto3
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from boto3.dynamodb.conditions import Key, Attr
 from botocore.exceptions import ClientError
 from functools import wraps
+from urllib.parse import unquote
 
 app = Flask(__name__)
 
@@ -52,19 +52,29 @@ def login_required(f):
 
 
 # ── Helper: presigned S3 URL ──────────────────────────────────────────────────
+# Simple in-memory cache for presigned URLs
+url_cache = {}
+
 def presigned_url(artist: str) -> str:
     if DYNAMODB_ENDPOINT:
-        # Local dev — S3 not available, skip entirely
         return ""
+
+    # Check cache first
+    if artist in url_cache:
+        return url_cache[artist]
+
     key = artist.replace(" ", "").replace("&", "").replace(".", "") + ".jpg"
     try:
         s3_client.head_object(Bucket=S3_BUCKET, Key=key)
-        return s3_client.generate_presigned_url(
+        url = s3_client.generate_presigned_url(
             "get_object",
             Params={"Bucket": S3_BUCKET, "Key": key},
             ExpiresIn=900,
         )
+        url_cache[artist] = url
+        return url
     except Exception:
+        url_cache[artist] = ""
         return ""
 
 
@@ -139,43 +149,40 @@ def me():
 @app.route("/music/query", methods=["GET"])
 @login_required
 def query_music():
-    title  = (request.args.get("title")  or "").strip()
-    artist = (request.args.get("artist") or "").strip()
+    title  = (request.args.get("title")  or "").strip().lower()
+    artist = (request.args.get("artist") or "").strip().lower()
     year   = (request.args.get("year")   or "").strip()
-    album  = (request.args.get("album")  or "").strip()
+    album  = (request.args.get("album")  or "").strip().lower()
 
     if not any([title, artist, year, album]):
         return jsonify({"error": "At least one field must be provided"}), 400
 
     try:
-        t_start = time.perf_counter()
-
-        resp  = music_table.scan()
-        items = resp.get("Items", [])
-
-        t_end      = time.perf_counter()
-        elapsed_ms = (t_end - t_start) * 1000
-        elapsed_ns = (t_end - t_start) * 1e9
-        print(f"[QUERY] Scan -> {len(items)} items | {elapsed_ms:.4f} ms ({elapsed_ns:.0f} ns)")
+        resp = music_table.scan()
+        all_items = resp.get("Items", [])
 
     except ClientError as e:
         return jsonify({"error": str(e)}), 500
 
-    def matches(item):
-        if title  and title.lower()  not in item.get("title",  "").lower(): return False
-        if artist and artist.lower() not in item.get("artist", "").lower(): return False
-        if year   and year not in str(item.get("year", "")):               return False
-        if album  and album.lower()  not in item.get("album",  "").lower(): return False
-        return True
+    results = []
+    for item in all_items:
+        if artist and artist not in item.get("artist", "").lower():
+            continue
+        if title and title not in item.get("title", "").lower():
+            continue
+        if album and album not in item.get("album", "").lower():
+            continue
+        if year and year != item.get("year", ""):
+            continue
+        results.append(item)
 
-    results = [i for i in items if matches(i)]
     for item in results:
         item["img_url"] = presigned_url(item.get("artist", "")) or item.get("image_url", "")
 
     if not results:
         return jsonify({"message": "No result is retrieved. Please query again", "songs": []}), 200
 
-    return jsonify({"songs": results, "debug": {"operation": "scan", "elapsed_ms": round(elapsed_ms, 4)}}), 200
+    return jsonify({"songs": results}), 200
 
 
 # ── Subscription routes ───────────────────────────────────────────────────────
@@ -192,7 +199,6 @@ def get_subscriptions():
     for item in items:
         item["img_url"] = presigned_url(item.get("artist", "")) or item.get("image_url", "")
     return jsonify({"subscriptions": items}), 200
-
 
 @app.route("/subscription", methods=["POST"])
 @login_required
@@ -218,16 +224,31 @@ def add_subscription():
 
     return jsonify({"message": "Subscribed successfully"}), 201
 
-
 @app.route("/subscription/<path:music_id>", methods=["DELETE"])
 @login_required
 def remove_subscription(music_id):
     email = get_current_user()
+    # DECODE the URL-encoded parameter
+    music_id = unquote(music_id)
     try:
-        sub_table.delete_item(Key={"email": email, "music_id": music_id})
+        response = sub_table.delete_item(
+            Key={
+                "email": email,
+                "music_id": music_id
+            },
+            ReturnValues="ALL_OLD"
+        )
+
+        if response.get('Attributes'):
+            print(f"Successfully deleted: {response['Attributes']}")
+            return jsonify({"message": "Subscription removed"}), 200
+        else:
+            print(f"No item found: email={email}, music_id={music_id}")
+            return jsonify({"error": "Subscription not found"}), 404
+
     except ClientError as e:
+        print(f"DynamoDB error: {e}")
         return jsonify({"error": str(e)}), 500
-    return jsonify({"message": "Subscription removed"}), 200
 
 
 # ── Health check ──────────────────────────────────────────────────────────────

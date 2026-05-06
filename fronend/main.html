@@ -398,7 +398,7 @@
 
 <script>
   // ── Config ─────────────────────────────────────────────────────────────────
-  const API_BASE = "http://54.175.223.18";
+  const API_BASE = "https://pfysrpnf81.execute-api.us-east-1.amazonaws.com/prod";
 
   // Track which music_ids are already subscribed
   let subscribedIds = new Set();
@@ -461,11 +461,14 @@
     return `${s.artist}#${s.title}#${s.year}#${s.album}`;
   }
 
+  function safeB64(str) {
+    return btoa(unescape(encodeURIComponent(str))).replace(/[^a-zA-Z0-9]/g, '');
+  }
+
   function subCard(s) {
-    const id  = musicId(s);
-    const esc = encodeURIComponent(id);
+    const id = s.music_id || musicId(s);
     return `
-      <div class="song-card" id="sub-${btoa(id).replace(/[^a-zA-Z0-9]/g,'')}">
+      <div class="song-card" id="sub-${safeB64(id)}">
         <img class="song-img" src="${s.img_url || ''}" alt="${esc_html(s.artist)}"
              onerror="this.style.opacity='0.3'">
         <div class="song-info">
@@ -474,7 +477,7 @@
             <strong>${esc_html(s.artist)}</strong> · ${esc_html(s.album)} · ${esc_html(s.year)}
           </div>
         </div>
-        <button class="btn-remove" onclick="removeSub('${id.replace(/'/g,"\\'")}')">Remove</button>
+        <button class="btn-remove" data-id="${esc_html(id)}" onclick="removeSub(this.dataset.id)">Remove</button>
       </div>`;
   }
 
@@ -484,34 +487,46 @@
     if (card) card.style.opacity = "0.4";
 
     try {
-      const r = await fetch(`${API_BASE}/subscription/${encodeURIComponent(id)}`, {
-        method: "DELETE", headers: authHeaders()
-      });
-      if (r.ok) {
-        subscribedIds.delete(id);
-        if (card) card.remove();
-        // Update subscribe buttons in results grid
-        const btn = document.querySelector(`[data-mid="${CSS.escape(id)}"]`);
-        if (btn) {
-          btn.textContent = "Subscribe";
-          btn.disabled = false;
-          btn.className = "btn-ghost";
+        const r = await fetch(`${API_BASE}/subscription/${encodeURIComponent(id)}`, {
+            method: "DELETE", headers: authHeaders()
+        });
+
+        if (r.ok) {
+            subscribedIds.delete(id);
+            if (card) card.remove();
+
+            // 🔥 FIX THIS - Look for both button and badge
+            const resultCard = document.querySelector(`.result-card:has([data-mid="${CSS.escape(id)}"])`);
+            if (resultCard) {
+                const btn = resultCard.querySelector('.btn-ghost');
+                const badge = resultCard.querySelector('.subscribed-badge');
+
+                if (btn) {
+                    // Replace button with Subscribe button
+                    const songData = btn.getAttribute('data-song');
+                    btn.outerHTML = `<button class="btn-ghost" data-mid="${esc_html(id)}" data-song="${songData}" onclick="subscribe(this)">Subscribe</button>`;
+                } else if (badge) {
+                    // Replace badge with Subscribe button
+                    const songData = badge.getAttribute('data-song');
+                    badge.outerHTML = `<button class="btn-ghost" data-mid="${esc_html(id)}" data-song="${songData}" onclick="subscribe(this)">Subscribe</button>`;
+                }
+            }
+
+            // Show empty state if library now empty
+            const subList = document.getElementById("subList");
+            if (!subList.querySelector(".song-card")) {
+                subList.innerHTML = `<div class="empty-state">
+                    <span class="icon">♪</span>
+                    Your library is empty.<br>Search for songs and subscribe!
+                </div>`;
+            }
+        } else {
+            if (card) card.style.opacity = "1";
         }
-        // Show empty state if library now empty
-        const subList = document.getElementById("subList");
-        if (!subList.querySelector(".song-card")) {
-          subList.innerHTML = `<div class="empty-state">
-            <span class="icon">♪</span>
-            Your library is empty.<br>Search for songs and subscribe!
-          </div>`;
-        }
-      } else {
-        if (card) card.style.opacity = "1";
-      }
     } catch {
-      if (card) card.style.opacity = "1";
+        if (card) card.style.opacity = "1";
     }
-  }
+}
 
   // ── Music query ────────────────────────────────────────────────────────────
   async function doQuery() {
@@ -568,53 +583,68 @@
   }
 
   function resultCard(s) {
-    const id       = musicId(s);
-    const already  = subscribedIds.has(id);
-    const btnHtml  = already
-      ? `<span class="subscribed-badge">✓ Subscribed</span>`
-      : `<button class="btn-ghost" data-mid="${esc_html(id)}" onclick="subscribe(this, ${jsonSong(s)})">Subscribe</button>`;
+    const id = musicId(s);
+    const already = subscribedIds.has(id);
+    const songData = JSON.stringify(s).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
-    return `
-      <div class="result-card">
-        <img class="result-img" src="${s.img_url || ''}" alt="${esc_html(s.artist)}"
-             onerror="this.style.opacity='0.3'">
-        <div class="result-info">
-          <div class="result-title">${esc_html(s.title)}</div>
-          <div class="result-meta">
-            <strong>${esc_html(s.artist)}</strong><br>
-            ${esc_html(s.album)} · ${esc_html(s.year)}
-          </div>
-        </div>
-        ${btnHtml}
-      </div>`;
-  }
+    if (already) {
+        return `
+            <div class="result-card">
+                <img class="result-img" src="${s.img_url || ''}" alt="${esc_html(s.artist)}"
+                     onerror="this.style.opacity='0.3'">
+                <div class="result-info">
+                    <div class="result-title">${esc_html(s.title)}</div>
+                    <div class="result-meta">
+                        <strong>${esc_html(s.artist)}</strong><br>
+                        ${esc_html(s.album)} · ${esc_html(s.year)}
+                    </div>
+                </div>
+                <span class="subscribed-badge" data-mid="${esc_html(id)}" data-song='${songData}'>✓ Subscribed</span>
+            </div>`;
+    } else {
+        return `
+            <div class="result-card">
+                <img class="result-img" src="${s.img_url || ''}" alt="${esc_html(s.artist)}"
+                     onerror="this.style.opacity='0.3'">
+                <div class="result-info">
+                    <div class="result-title">${esc_html(s.title)}</div>
+                    <div class="result-meta">
+                        <strong>${esc_html(s.artist)}</strong><br>
+                        ${esc_html(s.album)} · ${esc_html(s.year)}
+                    </div>
+                </div>
+                <button class="btn-ghost" data-mid="${esc_html(id)}" data-song='${songData}' onclick="subscribe(this)">Subscribe</button>
+            </div>`;
+    }
+}
 
-  async function subscribe(btn, song) {
+  async function subscribe(btn) {
+    const song = JSON.parse(btn.getAttribute('data-song'));
+    const id = musicId(song);
+
     btn.disabled = true;
     btn.innerHTML = `<span class="spinner"></span>`;
 
     try {
-      const r = await fetch(`${API_BASE}/subscription`, {
-        method: "POST",
-        headers: authHeaders({ "Content-Type": "application/json" }),
-        body: JSON.stringify(song),
-      });
+        const r = await fetch(`${API_BASE}/subscription`, {
+            method: "POST",
+            headers: authHeaders({ "Content-Type": "application/json" }),
+            body: JSON.stringify(song),
+        });
 
-      if (r.ok) {
-        subscribedIds.add(musicId(song));
-        // Replace button with badge
-        btn.outerHTML = `<span class="subscribed-badge">✓ Subscribed</span>`;
-        // Refresh subscription panel
-        loadSubscriptions();
-      } else {
+        if (r.ok) {
+            subscribedIds.add(id);
+            btn.outerHTML = `<span class="subscribed-badge" data-mid="${esc_html(id)}" data-song='${btn.getAttribute('data-song')}'>✓ Subscribed</span>`;
+            loadSubscriptions();
+        } else {
+            btn.disabled = false;
+            btn.textContent = "Subscribe";
+        }
+    } catch {
         btn.disabled = false;
         btn.textContent = "Subscribe";
-      }
-    } catch {
-      btn.disabled = false;
-      btn.textContent = "Subscribe";
     }
-  }
+}
 
   // ── Utilities ──────────────────────────────────────────────────────────────
   function esc_html(str) {
